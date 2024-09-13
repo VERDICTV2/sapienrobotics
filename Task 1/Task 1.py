@@ -3,7 +3,6 @@ import pickle
 import os
 from sklearn.metrics import precision_recall_fscore_support
 
-# Helper functions for data loading and preprocessing
 def unpickle(file):
     with open(file, 'rb') as fo:
         dict = pickle.load(fo, encoding='bytes')
@@ -42,7 +41,7 @@ class Dense:
         self.v_weights = np.zeros_like(self.weights)
         self.m_bias = np.zeros_like(self.bias)
         self.v_bias = np.zeros_like(self.bias)
-        self.t = 0  # timestep for Adam optimizer
+        self.t = 0  
     
     def forward(self, inputs, training=True):
         self.inputs = inputs
@@ -53,7 +52,7 @@ class Dense:
         grad_weights = np.dot(self.inputs.T, grad_output)
         grad_bias = np.sum(grad_output, axis=0, keepdims=True)
 
-        # Adam update for weights
+        # Adam weight update
         self.t += 1
         self.m_weights = beta1 * self.m_weights + (1 - beta1) * grad_weights
         self.v_weights = beta2 * self.v_weights + (1 - beta2) * (grad_weights ** 2)
@@ -63,7 +62,7 @@ class Dense:
 
         self.weights -= learning_rate * m_hat_weights / (np.sqrt(v_hat_weights) + epsilon)
 
-        # Adam update for bias
+        # Adam bias update
         self.m_bias = beta1 * self.m_bias + (1 - beta1) * grad_bias
         self.v_bias = beta2 * self.v_bias + (1 - beta2) * (grad_bias ** 2)
 
@@ -119,7 +118,7 @@ class BatchNormalization:
         
         grad_input = grad_normalized / np.sqrt(self.var + self.epsilon) + grad_var * 2 * (self.inputs - self.mean) / m + grad_mean / m
 
-        # Adam update for gamma and beta
+        # Adam gamma and beta update
         self.t += 1
         self.m_gamma = beta1 * self.m_gamma + (1 - beta1) * grad_gamma
         self.v_gamma = beta2 * self.v_gamma + (1 - beta2) * (grad_gamma ** 2)
@@ -219,8 +218,8 @@ class Model:
                 
                 # Backpropagation
                 self.backward(grad, learning_rate)
-            
-            # Evaluate on validation set
+
+            # Validation 
             val_pred = self.forward(x_val, training=False)
             val_loss = cross_entropy_loss(val_pred, y_val)
             val_acc = np.mean(np.argmax(val_pred, axis=1) == y_val)
@@ -232,28 +231,21 @@ class Model:
         loss = cross_entropy_loss(y_pred, y_true)
         y_pred_class = np.argmax(y_pred, axis=1)
         accuracy = np.mean(y_pred_class == y_true)
-        
-        # Calculate precision and recall for each class
         precision, recall, _, _ = precision_recall_fscore_support(y_true, y_pred_class, average=None)
         
         return loss, accuracy, precision, recall
 
-# Main execution
 if __name__ == "__main__":
 
-    # Load and preprocess data
-    data_dir = r'C:\Users\Administrator\Downloads\cifar-10-python\cifar-10-batches-py'  # Update this path
+    data_dir = r'C:\Users\Administrator\Downloads\cifar-10-python\cifar-10-batches-py'
     x_train, y_train, x_test, y_test = load_cifar10(data_dir)
     
-    # Flatten the images
     x_train = x_train.reshape(x_train.shape[0], -1)
     x_test = x_test.reshape(x_test.shape[0], -1)
     
-    # Create and train the model
     model = Model()
     model.train(x_train, y_train, x_test, y_test, epochs=20, batch_size=64, learning_rate=0.001)
     
-    # Evaluate on test set
     test_loss, test_acc, test_precision, test_recall = model.evaluate(x_test, y_test)
     test_pred = model.forward(x_test, training=False)
     test_loss = cross_entropy_loss(test_pred, y_test)
@@ -262,8 +254,6 @@ if __name__ == "__main__":
     print("\nPrecision and Recall for each class:")
     for i, (p, r) in enumerate(zip(test_precision, test_recall)):
         print(f"Class {i}: Precision = {p:.4f}, Recall = {r:.4f}")
-    
-    # Calculate and print average precision and recall
     avg_precision = np.mean(test_precision)
     avg_recall = np.mean(test_recall)
     print(f"\nAverage Precision: {avg_precision:.4f}")
