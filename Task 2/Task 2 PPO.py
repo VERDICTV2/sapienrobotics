@@ -8,21 +8,19 @@ import matplotlib.pyplot as plt
 
 ENV_NAME = "CartPole-v1"
 
-# PPO Hyperparameters
 GAMMA = 0.99
 LEARNING_RATE = 0.0003
-EPSILON_CLIP = 0.2  # Clipping range for PPO
+EPSILON_CLIP = 0.2 
 BATCH_SIZE = 64
 EPOCHS = 10
-ENTROPY_BETA = 0.01  # Entropy regularization for better exploration
+ENTROPY_BETA = 0.01 
 EPISODES = 1000
-UPDATE_EVERY = 2000  # Number of steps before each PPO update
+UPDATE_EVERY = 2000
 
-# Track performance metrics
 rewards_history = []
 moving_average_rewards = []
 stability_list = []
-MOVING_AVERAGE_WINDOW = 100  # Window size for moving average
+MOVING_AVERAGE_WINDOW = 100 
 
 
 class PPOAgent:
@@ -68,7 +66,6 @@ class PPOAgent:
     def ppo_loss(self, old_probs, actions, advantages):
         """Compute PPO loss with clipping"""
         def loss(y_true, y_pred):
-            # Clip the new probabilities between (1 - epsilon) and (1 + epsilon) of the old probability
             new_probs = tf.reduce_sum(y_true * y_pred, axis=-1)
             old_probs_clipped = tf.clip_by_value(new_probs / old_probs, 1 - EPSILON_CLIP, 1 + EPSILON_CLIP)
             surrogate_loss = advantages * new_probs
@@ -82,7 +79,7 @@ class PPOAgent:
         gae = 0
         for reward, value, next_value, done in zip(reversed(rewards), reversed(values), reversed(next_values), reversed(dones)):
             delta = reward + GAMMA * next_value * (1 - done) - value
-            gae = delta + GAMMA * 0.95 * gae  # GAE with lambda = 0.95
+            gae = delta + GAMMA * 0.95 * gae 
             advantages.append(gae)
         return list(reversed(advantages))
     
@@ -94,7 +91,6 @@ class PPOAgent:
 
         states, actions, rewards, next_states, dones, old_probs, values = zip(*self.memory)
         
-        # Convert to numpy arrays and ensure correct shapes
         states = np.array(states).reshape(-1, self.observation_space)
         next_states = np.array(next_states).reshape(-1, self.observation_space)
         actions = np.array(actions)
@@ -109,7 +105,6 @@ class PPOAgent:
             advantages = np.array(advantages)
             returns = advantages + values
 
-            # Train actor
             actions_one_hot = np.eye(self.action_space)[actions]
             with tf.GradientTape() as tape:
                 new_probs = self.actor(states)
@@ -117,7 +112,6 @@ class PPOAgent:
             grads = tape.gradient(ppo_loss_value, self.actor.trainable_variables)
             self.actor_optimizer.apply_gradients(zip(grads, self.actor.trainable_variables))
 
-            # Train critic
             with tf.GradientTape() as tape:
                 values_pred = self.critic(states)
                 critic_loss_value = tf.reduce_mean(tf.square(returns - values_pred))
@@ -134,19 +128,16 @@ class PPOAgent:
             print(f"Rewards shape: {rewards.shape}")
             print(f"Dones shape: {dones.shape}")
 
-        # Clear memory
         self.memory = []
 
 def update_metrics(step, run):
     """ Updates rewards, moving averages, and stability measures """
     rewards_history.append(step)
 
-    # Calculate moving average over the last N episodes
     if len(rewards_history) >= MOVING_AVERAGE_WINDOW:
         moving_average = np.mean(rewards_history[-MOVING_AVERAGE_WINDOW:])
         moving_average_rewards.append(moving_average)
 
-        # Calculate stability (standard deviation) over the last N episodes
         stability = np.std(rewards_history[-MOVING_AVERAGE_WINDOW:])
         stability_list.append(stability)
         print(f"Run: {run}, Moving Avg Reward: {moving_average:.2f}, Stability: {stability:.2f}")
@@ -156,7 +147,6 @@ def plot_results():
     """ Plots the learning curve (rewards per episode), moving average, stability, and average reward """
     plt.figure(figsize=(15, 10))
 
-    # Plot raw rewards and moving average
     plt.subplot(2, 2, 1)
     plt.plot(rewards_history, label="Reward per Episode")
     plt.plot(range(MOVING_AVERAGE_WINDOW, len(rewards_history) + 1), moving_average_rewards, label=f"Moving Avg (window={MOVING_AVERAGE_WINDOW})", color="orange")
@@ -165,7 +155,6 @@ def plot_results():
     plt.ylabel("Reward")
     plt.legend()
 
-    # Plot stability (standard deviation of last N rewards)
     plt.subplot(2, 2, 2)
     plt.plot(range(MOVING_AVERAGE_WINDOW, len(rewards_history) + 1), stability_list, label="Stability (Std. Dev)", color="green")
     plt.title("Stability over Time")
@@ -173,7 +162,6 @@ def plot_results():
     plt.ylabel("Stability (Standard Deviation)")
     plt.legend()
 
-    # Plot average reward per episode
     plt.subplot(2, 2, 3)
     cumulative_rewards = np.cumsum(rewards_history)
     average_rewards = cumulative_rewards / np.arange(1, len(rewards_history) + 1)
@@ -183,7 +171,6 @@ def plot_results():
     plt.ylabel("Average Reward")
     plt.legend()
 
-    # Plot learning curve with error bands
     plt.subplot(2, 2, 4)
     window = MOVING_AVERAGE_WINDOW
     means = moving_average_rewards
@@ -198,12 +185,11 @@ def plot_results():
 
     plt.tight_layout()
     plt.draw()
-    plt.pause(0.001)  # Pause to render the plot
+    plt.pause(0.001)
 
 
-# Modify the cartpole function to save plots at regular intervals
 def cartpole():
-    env = gym.make(ENV_NAME)  # Remove render_mode="human" for faster training
+    env = gym.make(ENV_NAME, render_mode="human") 
     observation_space = env.observation_space.shape[0]
     action_space = env.action_space.n
     agent = PPOAgent(observation_space, action_space)
@@ -211,7 +197,7 @@ def cartpole():
     run = 0
     step_count = 0
 
-    plt.ion()  # Turn on interactive mode for matplotlib
+    plt.ion() 
 
     while run < EPISODES:
         run += 1
@@ -224,7 +210,6 @@ def cartpole():
             step += 1
             step_count += 1
             
-            # Act and store experience
             action, prob = agent.act(state)
             next_state, reward, terminated, truncated, _ = env.step(action)
             done = terminated or truncated
@@ -240,19 +225,15 @@ def cartpole():
                 print(f"Run: {run}, Score: {episode_reward}")
                 update_metrics(episode_reward, run)
                 break
-
-            # Update policy every `UPDATE_EVERY` steps
             if step_count % UPDATE_EVERY == 0:
                 agent.experience_replay()
 
-        # Display plots every 50 episodes
         if run % 50 == 0:
             plot_results()
             print(f"Displayed graphs at episode {run}. Close the plot window or press any key to continue training.")
-            plt.pause(15)  # Pause for 1 second to ensure the plot is displayed
-
-    #splt.ioff()  # Turn off interactive mode
-    plt.show()  # Show the final plot
+            plt.pause(1) 
+            
+    plt.show() 
 
 if __name__ == "__main__":
     cartpole()
