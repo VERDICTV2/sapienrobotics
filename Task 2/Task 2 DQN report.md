@@ -1,4 +1,4 @@
-# Deep Q-Network (DQN) Implementation for CartPole: Detailed Report
+# Deep Q-Network (DQN) Implementation for CartPole
 
 ## 1. Implementation Details
 
@@ -48,18 +48,17 @@ The implementation includes visual representations of the learning process:
 1. **Learning Curve**: 
    - Shows raw rewards per episode
    - Displays moving average rewards
-
-2. **Stability Over Time**:
-   - Plots the standard deviation of rewards
-
-3. **Average Reward per Episode**:
+  
+2. **Average Reward per Episode**:
    - Tracks the overall learning progress
 
-These plots are updated every 10 episodes, providing real-time insights into the agent's performance.
+![Task 2 DQN](https://github.com/user-attachments/assets/cc2f0aad-97ac-446c-b96a-4a26e3ed8809)
+
+These plots are updated every 50 episodes, providing real-time insights into the agent's performance.
 
 ## 3. Discussion
 
-### 3.1 Strengths of the Implementation
+### 3.1 Strengths
 
 1. **Adaptive Exploration**: The epsilon-greedy strategy with decay allows for balanced exploration and exploitation.
 
@@ -71,7 +70,7 @@ These plots are updated every 10 episodes, providing real-time insights into the
 
 5. **Flexibility**: The code structure allows for easy modification of hyperparameters and network architecture.
 
-### 3.2 Weaknesses and Potential Improvements
+### 3.2 Weaknesses
 
 1. **Fixed Network Architecture**: The current implementation uses a fixed network size. Implementing a more flexible architecture could improve adaptability to different environments.
 
@@ -84,16 +83,6 @@ These plots are updated every 10 episodes, providing real-time insights into the
 5. **Basic Reward Structure**: The reward function is simple (-reward for terminal states). A more sophisticated reward shaping could potentially speed up learning.
 
 6. **Lack of Prioritized Experience Replay**: Implementing prioritized replay could improve learning efficiency by focusing on more important transitions.
-
-### 3.3 Further Considerations
-
-1. **Scalability**: While effective for CartPole, the current implementation may need significant modifications for more complex environments.
-
-2. **Reproducibility**: Adding seed setting for random number generators would enhance experiment reproducibility.
-
-3. **Performance Benchmarking**: Comparing this implementation with other RL algorithms (e.g., DDPG, A3C) could provide valuable insights.
-
-4. **Generalization**: Testing the trained agent on slightly modified versions of CartPole could assess its generalization capabilities.
 
 ## 4. Conclusion
 
