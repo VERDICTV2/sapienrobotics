@@ -23,9 +23,9 @@ EXPLORATION_DECAY = 0.995
 # Track performance metrics
 rewards_history = []
 moving_average_rewards = []
-average_rewards_per_episode = []  # New list to track average rewards
+average_rewards_per_episode = []
 stability_list = []
-MOVING_AVERAGE_WINDOW = 100  # Window size for moving average
+MOVING_AVERAGE_WINDOW = 100
 
 class DQNSolver:
     def __init__(self, observation_space, action_space):
@@ -68,12 +68,10 @@ def update_metrics(step, run):
     average_reward = np.mean(rewards_history)  # Calculate average reward
     average_rewards_per_episode.append(average_reward)  # Track average rewards
 
-    # Calculate moving average over the last N episodes
     if len(rewards_history) >= MOVING_AVERAGE_WINDOW:
         moving_average = np.mean(rewards_history[-MOVING_AVERAGE_WINDOW:])
         moving_average_rewards.append(moving_average)
 
-        # Calculate stability (standard deviation) over the last N episodes
         stability = np.std(rewards_history[-MOVING_AVERAGE_WINDOW:])
         stability_list.append(stability)
         print(f"Run: {run}, Moving Avg Reward: {moving_average:.2f}, Stability: {stability:.2f}, Avg Reward: {average_reward:.2f}")
@@ -82,7 +80,6 @@ def plot_results():
     """ Plots the learning curve (rewards per episode), moving average, and stability """
     plt.figure(figsize=(18, 6))
 
-    # Plot raw rewards and moving average
     plt.subplot(1, 3, 1)
     plt.plot(rewards_history, label="Reward per Episode")
     if moving_average_rewards:
@@ -92,7 +89,6 @@ def plot_results():
     plt.ylabel("Reward")
     plt.legend()
 
-    # Plot stability (standard deviation of last N rewards)
     plt.subplot(1, 3, 2)
     if stability_list:
         plt.plot(range(MOVING_AVERAGE_WINDOW, len(rewards_history) + 1), stability_list, label="Stability (Std. Dev)", color="green")
@@ -101,7 +97,6 @@ def plot_results():
     plt.ylabel("Stability (Standard Deviation)")
     plt.legend()
 
-    # Plot average rewards per episode
     plt.subplot(1, 3, 3)
     if average_rewards_per_episode:
         plt.plot(range(1, len(average_rewards_per_episode) + 1), average_rewards_per_episode, label="Average Reward per Episode", color="red")
@@ -114,7 +109,7 @@ def plot_results():
     plt.show()
 
 def cartpole():
-    env = gym.make(ENV_NAME)
+    env = gym.make(ENV_NAME, render_mode ="human" )
     score_logger = ScoreLogger(ENV_NAME)
     observation_space = env.observation_space.shape[0]
     action_space = env.action_space.n
@@ -123,15 +118,15 @@ def cartpole():
 
     while True:
         run += 1
-        state, _ = env.reset()  # Unpack the tuple returned by env.reset()
+        state, _ = env.reset()
         state = np.reshape(state, [1, observation_space])
         step = 0
         while True:
             step += 1
             env.render()
             action = dqn_solver.act(state)
-            state_next, reward, terminated, truncated, info = env.step(action)  # Unpack the new return values
-            done = terminated or truncated  # Combine terminated and truncated into a single 'done' flag
+            state_next, reward, terminated, truncated, info = env.step(action)
+            done = terminated or truncated
             reward = reward if not done else -reward
             state_next = np.reshape(state_next, [1, observation_space])
             dqn_solver.remember(state, action, reward, state_next, done)
@@ -140,13 +135,11 @@ def cartpole():
                 print(f"Run: {run}, Exploration Rate: {dqn_solver.exploration_rate:.4f}, Score: {step}")
                 score_logger.add_score(step, run)
 
-                # Update metrics after each episode
                 update_metrics(step, run)
                 break
             dqn_solver.experience_replay()
 
-        # Plot results after every 10 episodes
-        if run % 10 == 0:
+        if run % 50 == 0:
             plot_results()
 
     env.close()
