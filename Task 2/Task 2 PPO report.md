@@ -52,7 +52,7 @@ These plots are updated every 50 episodes during training, providing real-time i
 
 ## 3. Discussion
 
-### 3.1 Strengths of the Implementation
+### 3.1 Strengths
 
 1. **PPO Algorithm**: PPO is known for its stability and sample efficiency, making it a good choice for the CartPole environment.
 
@@ -66,7 +66,7 @@ These plots are updated every 50 episodes during training, providing real-time i
 
 6. **Real-time Visualization**: Updating plots every 50 episodes allows for monitoring the training process and early detection of issues.
 
-### 3.2 Weaknesses and Potential Improvements
+### 3.2 Weaknesses
 
 1. **Fixed Hyperparameters**: The implementation uses fixed hyperparameters. Implementing adaptive learning rates or automated hyperparameter tuning could improve performance.
 
